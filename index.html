@@ -57,8 +57,8 @@
         .ai-mouth { width: 12px; height: 3px; background: var(--primary-neon); border-radius: 5px; box-shadow: 0 0 5px var(--primary-neon); }
         @keyframes blink { 0%, 96%, 98%, 100% { transform: scaleY(1); } 97%, 99% { transform: scaleY(0.1); } }
 
-        /* --- Enhanced Splash Screen --- */
-        #splash-screen { background: radial-gradient(circle at center, #110e1a 0%, #050508 100%); justify-content: center; align-items: center; z-index: 9999; }
+        /* --- Enhanced Splash Screen WITH INLINE STYLE FIX FOR FOUC --- */
+        #splash-screen { display: flex !important; z-index: 999999 !important; position: fixed !important; top: 0; left: 0; width: 100vw; height: 100vh; background-color: var(--bg-dark); background: radial-gradient(circle at center, #110e1a 0%, #050508 100%); justify-content: center; align-items: center; }
         .splash-glow { position: absolute; width: 250px; height: 250px; background: var(--primary-glow); border-radius: 50%; filter: blur(100px); animation: pulseGlow 2s infinite alternate; }
         .splash-content { position: relative; z-index: 1; text-align: center; animation: slideUpFade 1s ease-out forwards; }
         .splash-logo { font-size: 3.8rem; font-weight: 800; letter-spacing: -1px; color: white; text-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 5px; }
@@ -656,7 +656,7 @@
         
         let isAppInit = false; 
 
-        // DRAGGABLE AI ROBOT LOGIC
+        // DRAGGABLE AI ROBOT LOGIC (Optimized for Web/Mobile click vs drag)
         const aiTrigger = document.getElementById('vibe-ai-trigger');
         let isDragging = false;
         let startX, startY, initialX, initialY;
@@ -684,7 +684,6 @@
             let diffX = currentX - startX;
             let diffY = currentY - startY;
             
-            // Only trigger drag if movement is more than 5px to prevent click block
             if (Math.abs(diffX) > 5 || Math.abs(diffY) > 5) {
                 isDragging = true;
             }
@@ -927,22 +926,28 @@
         // ==========================================
         // VIBE AI: 500+ COMMANDS LOGIC ENGINE
         // ==========================================
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        const synth = window.speechSynthesis;
-        if(recognition) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        if(SpeechRecognition) {
+            recognition = new SpeechRecognition();
             recognition.lang = 'en-US'; 
             recognition.continuous = false;
         }
+        
+        const synth = window.speechSynthesis;
 
         aiTrigger.addEventListener('click', () => {
             if(isDragging) { isDragging = false; return; } 
-            if(!recognition) return alert("Your browser doesn't support voice AI.");
+            if(!recognition) {
+                alert("আপনার ব্রাউজারটি এআই সাপোর্ট করে না। দয়া করে গুগল ক্রোম ব্যবহার করুন।");
+                return;
+            }
             
             aiTrigger.style.borderColor = "#0df"; 
-            speak("হ্যালো! কী জানতে চান? কেমন আছেন?");
+            speak("হ্যালো! কী জানতে চান? কেমন আছেন?", 'bn-BD');
             
             setTimeout(() => { 
-                try { recognition.start(); } catch(e) { console.log(e); } 
+                try { recognition.start(); } catch(e) { console.log("Speech error: ", e); } 
             }, 3000);
             
             setTimeout(() => { aiTrigger.style.borderColor = "var(--primary-neon)"; }, 8000);
@@ -959,6 +964,17 @@
                 const command = event.results[0][0].transcript;
                 aiTrigger.style.borderColor = "var(--primary-neon)";
                 processAICommand(command);
+            };
+
+            recognition.onerror = (event) => {
+                aiTrigger.style.borderColor = "var(--primary-neon)";
+                if(event.error === 'not-allowed' || event.error === 'audio-capture') {
+                    alert("Microphone Access Blocked! ব্রাউজারের সেটিংসে গিয়ে মাইক্রোফোন পারমিশন Allow করুন।");
+                }
+            };
+
+            recognition.onend = () => {
+                aiTrigger.style.borderColor = "var(--primary-neon)";
             };
         }
 
