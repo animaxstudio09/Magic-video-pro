@@ -117,7 +117,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             font-size: clamp(0.95rem, 4vw, 1.15rem);
-            max-width: 170px; 
+            max-width: 170px;
             display: inline-block;
             font-style: italic;
             letter-spacing: 0.5px;
@@ -1020,13 +1020,13 @@
     let totalSlides = 0;
     let slideInterval = null;
     
-    // ================= UI LOADING 1 TO 100% (NEW) =================
+    // ================= UI LOADING 1 TO 100% =================
     let loadProgress = 0;
     const progressFill = document.getElementById('loader-progress-fill');
     const progressText = document.getElementById('loader-progress-text');
     
     let loadInterval = setInterval(() => {
-        loadProgress += Math.floor(Math.random() * 4) + 1; // 1 to 4 increments
+        loadProgress += Math.floor(Math.random() * 4) + 1;
         if(loadProgress >= 100) {
             loadProgress = 100;
             clearInterval(loadInterval);
@@ -1040,14 +1040,14 @@
                     setTimeout(() => loader.remove(), 600); 
                 }
                 document.getElementById('appBox').classList.remove('hidden');
-            }, 400); // 0.4s pause after hitting 100%
+            }, 400); 
         } else {
             if(progressFill) progressFill.style.width = loadProgress + '%';
             if(progressText) progressText.innerText = loadProgress + '%';
         }
-    }, 30); // smooth, fast load ~1.5 - 2s total
+    }, 30); 
 
-    // ================= GLOBAL COUNTDOWN UPDATER (REAL-TIME SECONDS) =================
+    // ================= GLOBAL COUNTDOWN UPDATER =================
     window.updateCountdowns = () => {
         const now = new Date().getTime();
         document.querySelectorAll('.match-countdown').forEach(el => {
@@ -1074,7 +1074,7 @@
             }
         });
     };
-    setInterval(window.updateCountdowns, 1000); // Updates every 1 second perfectly
+    setInterval(window.updateCountdowns, 1000);
 
     // ================= GENERAL FUNCTIONS =================
     
@@ -1143,7 +1143,7 @@
         }
     };
 
-    // ================= NEW: RESULTS LOGIC =================
+    // ================= RESULTS LOGIC =================
     window.loadResults = () => {
         switchTab('results', document.getElementById('nav-results'));
         const container = document.getElementById('results-list-container');
@@ -1153,13 +1153,11 @@
             return;
         }
 
-        // Get matches that the user joined AND are in the past
         const playedMatches = allMatches.filter(m => {
             let isPast = new Date(m.matchTime).getTime() <= new Date().getTime();
             return isPast && m.players && m.players.includes(currentUserData.uid);
         });
 
-        // Sort by most recent first
         playedMatches.sort((a, b) => new Date(b.matchTime).getTime() - new Date(a.matchTime).getTime());
 
         if(playedMatches.length === 0) {
@@ -1186,7 +1184,6 @@
                 m.results.forEach((res, index) => {
                     let rank = index + 1;
                     let rankClass = rank === 1 ? 'res-rank-1' : (rank === 2 ? 'res-rank-2' : (rank === 3 ? 'res-rank-3' : ''));
-                    // Highlight the current user's row
                     let rowBg = (res.uid === currentUserData.uid || res.name === m.joinedPlayersInfo?.[currentUserData.uid]) ? 'background: rgba(255,136,0,0.1);' : '';
 
                     html += `<tr style="${rowBg}">
@@ -1215,17 +1212,14 @@
 
         try {
             let history = [];
-            // Fetch Deposits
             const depQ = query(collection(db, "tenants", currentTenant, "addFundRequests"), where("uid", "==", currentUserData.uid));
             const depSnap = await getDocs(depQ);
             depSnap.forEach(doc => { let d = doc.data(); d.type = 'Deposit'; history.push(d); });
 
-            // Fetch Withdraws
             const witQ = query(collection(db, "tenants", currentTenant, "withdrawRequests"), where("uid", "==", currentUserData.uid));
             const witSnap = await getDocs(witQ);
             witSnap.forEach(doc => { let d = doc.data(); d.type = 'Withdraw'; history.push(d); });
 
-            // Sort by Date Descending
             history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
             if(history.length === 0) {
@@ -1299,7 +1293,6 @@
         document.getElementById('sidebar-overlay').classList.toggle('active'); 
     };
     
-    // UPDATED SWITCH TAB
     window.switchTab = (tab, el = null) => {
         const tabs = ['home', 'matches', 'profile', 'wallet', 'rules', 'developer', 'history', 'notifications', 'results', 'leaderboard'];
         tabs.forEach(t => { 
@@ -1336,7 +1329,6 @@
     const fakeNames = ["Sabbir", "Rakib", "Arif", "Hasan", "Roni", "Tamim", "Mahfuz", "Shihab", "Raju", "Sakib"];
     
     setInterval(() => {
-        // Only show if user is logged in
         if(document.getElementById('auth-screen').classList.contains('hidden') && Math.random() > 0.4) {
             let action = Math.random() > 0.5 ? 'deposited' : 'withdrew';
             let amt = [100, 200, 500, 80, 150, 300, 1000][Math.floor(Math.random() * 7)];
@@ -1350,7 +1342,7 @@
                 tBox.classList.remove('show'); 
             }, 4000);
         }
-    }, 35000); // Pops up randomly roughly every 35 seconds
+    }, 35000);
 
     // ================= FIREBASE LISTENERS =================
     onAuthStateChanged(auth, async (user) => {
@@ -1551,26 +1543,22 @@
 
         window.lastCounts = counts; 
 
-        // Hide all badges first
         document.querySelectorAll('.match-count-badge').forEach(b => {
             b.classList.add('hidden');
             let s = b.querySelector('span');
             if(s) s.innerText = '0';
         });
 
-        // Show active badges
         Object.keys(counts).forEach(cat => {
             let count = counts[cat];
             if(count > 0) {
                 let safeId = cat.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
                 let text = count + (count > 1 ? ' Matches' : ' Match');
                 
-                // For dynamic admin structure
                 let bDyn = document.getElementById('badge-dynamic-' + safeId);
                 let sDyn = document.getElementById('count-dynamic-' + safeId);
                 if(bDyn && sDyn) { sDyn.innerText = text; bDyn.classList.remove('hidden'); }
                 
-                // For fallback / legacy structure
                 let legacyMap = {
                     'BR SOLO': 'br-solo', 'BR DUO': 'br-duo', 'CS SOLO': 'cs-solo', 'CS SQUAD': 'cs-squad',
                     'LW SOLO': 'lw-solo', 'LW DUO': 'lw-duo', 'HEADSHOT CS': 'hs-cs', 'HEADSHOT LW': 'hs-lw',
@@ -1630,7 +1618,6 @@
             
             globalAppName = data.appName || "USR TOURNAMENT ESPORTS";
             
-            // NEW: SAVING TO CACHE FOR INSTANT LOAD NEXT TIME
             localStorage.setItem('app_name_cache', globalAppName);
             
             document.getElementById('app-browser-title').innerText = globalAppName;
@@ -1647,7 +1634,6 @@
             if(data.appLogo) { 
                 globalAppLogo = data.appLogo; 
                 
-                // NEW: SAVING TO CACHE FOR INSTANT LOAD NEXT TIME
                 localStorage.setItem('app_logo_cache', globalAppLogo);
                 
                 if(document.getElementById('login-app-logo')) document.getElementById('login-app-logo').src = globalAppLogo; 
@@ -1658,7 +1644,6 @@
             
             updatePWAManifest(globalAppName, globalAppLogo);
             
-            // ================= SLIDER WITH CLICKABLE LINKS =================
             let sliderData = [];
             if (data.sliders) {
                 if (Array.isArray(data.sliders)) {
@@ -1716,7 +1701,6 @@
                 }
             }
             
-            // PROFILE DYNAMIC LOGIC
             if(data.profileAvatar) {
                 let el = document.getElementById('p-avatar-img'); if(el) el.src = data.profileAvatar;
                 let sbEl = document.getElementById('sb-avatar-img'); if(sbEl) sbEl.src = data.profileAvatar;
@@ -1725,7 +1709,6 @@
                 let el = document.getElementById('p-banner-div'); if(el) el.style.backgroundImage = `url('${data.profileBanner}')`;
             }
 
-            // DYNAMIC RULES (Deposit, Withdraw, Match Rules)
             if(data.depositRules) {
                 let depEl = document.getElementById('dynamic-deposit-rules');
                 if(depEl) depEl.innerHTML = data.depositRules;
@@ -1739,7 +1722,6 @@
                 if(ruleEl) ruleEl.innerHTML = data.appRules;
             }
 
-            // DEPOSIT NUMBER DYNAMIC LOGIC
             if(data.adminNumber) {
                 let adminNumEl = document.getElementById('dynamic-admin-number');
                 if(adminNumEl) {
@@ -1748,7 +1730,6 @@
                 }
             }
 
-            // ================= FULLY DYNAMIC HOME CATEGORIES FROM ADMIN PANEL =================
             if(data.homeCategories && data.homeCategories.length > 0) {
                 let catHtml = '';
                 data.homeCategories.forEach(group => {
@@ -1773,7 +1754,6 @@
                 });
                 document.getElementById('dynamic-home-container').innerHTML = catHtml;
             } else {
-                // ================= FALLBACK: Legacy Structure =================
                 if(data.brSoloImage) { let el = document.getElementById('img-br-solo'); if(el) el.src = data.brSoloImage; }
                 if(data.brDuoImage) { let el = document.getElementById('img-br-duo'); if(el) el.src = data.brDuoImage; }
                 if(data.csSoloImage) { let el = document.getElementById('img-cs-solo'); if(el) el.src = data.csSoloImage; }
@@ -1806,7 +1786,6 @@
             }
         });
         
-        // ================= MATCH SORTING (CLOSEST TIME FIRST) =================
         filtered.sort((a, b) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime());
         
         if(filtered.length === 0) { 
@@ -1845,14 +1824,13 @@
                         ${m.matchRules && m.matchRules.trim() !== '' ? `<button class="btn-anim" onclick="showMatchRules('${m.id}')" style="grid-column: span 3; margin-top: 5px; border-color: var(--primary);"><i class="fas fa-info-circle" style="color: var(--primary);"></i> Match Rules</button>` : ''}
                     </div>
                 </div>
-                <!-- NEW COUNTDOWN BANNER -->
                 <div class="mc-countdown-banner match-countdown" data-time="${m.matchTime}">
                     Loading Timer...
                 </div>
             </div>`;
         });
         container.innerHTML = html;
-        window.updateCountdowns(); // Initial countdown text setup
+        window.updateCountdowns(); 
     };
 
     window.showSlots = (matchId) => {
@@ -1890,7 +1868,6 @@
         
         const pastMatches = allMatches.filter(m => new Date(m.matchTime).getTime() <= new Date().getTime() && m.players && currentUserData && m.players.includes(currentUserData.uid));
         
-        // SORT HISTORY (MOST RECENT FIRST)
         pastMatches.sort((a, b) => new Date(b.matchTime).getTime() - new Date(a.matchTime).getTime());
 
         if(pastMatches.length === 0) { 
@@ -1961,7 +1938,6 @@
         });
     };
 
-    // ================= AUTO WHATSAPP BUTTON LOGIC (DEPOSIT) =================
     window.requestAddFund = async () => {
         let method = document.getElementById('add-method').value; 
         let amount = document.getElementById('add-amount').value; 
@@ -1978,7 +1954,6 @@
             
             _syncPaletteVector('push_val', Number(amount));
             
-            // Generate Auto WhatsApp Link
             let msg = encodeURIComponent(`হ্যালো এডমিন, আমি ৳${amount} ডিপোজিট রিকুয়েস্ট দিয়েছি।\nগেম নেম: ${currentUserData.name}\nমেথড: ${method}\nনাম্বার: ${sender}\nTrxID: ${trxId}`);
             let waLink = `https://wa.me/${globalAdminNumber}?text=${msg}`;
 
@@ -2000,7 +1975,6 @@
         }
     };
 
-    // ================= AUTO WHATSAPP BUTTON LOGIC (WITHDRAW) =================
     window.requestWithdraw = async () => {
         let amt = Number(document.getElementById('wd-amount').value); 
         let num = document.getElementById('wd-number').value;
@@ -2038,7 +2012,6 @@
                     
                     _syncPaletteVector('pull_val', Number(amt));
                     
-                    // Generate Auto WhatsApp Link
                     let msg = encodeURIComponent(`হ্যালো এডমিন, আমি ৳${amt} উইথড্র রিকুয়েস্ট দিয়েছি।\nগেম নেম: ${currentUserData.name}\nমেথড: ${method}\nরিসিভ নাম্বার: ${num}`);
                     let waLink = `https://wa.me/${globalAdminNumber}?text=${msg}`;
 
@@ -2178,15 +2151,23 @@
     }
   }
 
+  // FIXED NOTIFICATION PROMPT TRIGGER
   window.triggerPushPrompt = function() {
-    window.OneSignalDeferred.push(function(OneSignal) {
-        OneSignal.Notifications.requestPermission().then(function(hasPermission) {
-            if (hasPermission) {
-                OneSignal.User.PushSubscription.optIn();
-            } else {
+    if (typeof Notification !== "undefined") {
+        Notification.requestPermission().then((permission) => {
+            if (permission === "granted") {
+                if(window.OneSignal) {
+                    window.OneSignal.User.PushSubscription.optIn();
+                } else {
+                    window.OneSignalDeferred.push(function(OneSignal) {
+                        OneSignal.User.PushSubscription.optIn();
+                    });
+                }
+                dismissForceModal();
+            } else if (permission === "denied") {
                 Swal.fire({
                     title: 'Blocked!',
-                    text: 'আপনার ব্রাউজার থেকে নোটিফিকেশন Block করা আছে। দয়া করে Site Settings থেকে এটি Allow করুন।',
+                    text: 'আপনার ব্রাউজার থেকে নোটিফিকেশন Block করা আছে। ব্রাউজারের (⋮) মেনু থেকে Site Settings এ গিয়ে Notifications "Allow" করুন।',
                     icon: 'warning',
                     background: '#12141c',
                     color: '#fff',
@@ -2194,7 +2175,11 @@
                 });
             }
         });
-    });
+    } else {
+        window.OneSignalDeferred.push(function(OneSignal) {
+            OneSignal.User.PushSubscription.optIn();
+        });
+    }
   };
 
   function renderForceModal() {
